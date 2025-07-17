@@ -163,3 +163,52 @@ The Python AI Agent is the core intelligence layer for the ArangoDB MCP server. 
 - Add new tool schemas to MCP server and update the categorizer for new capabilities.
 - Extend entity extraction logic for domain-specific queries.
 - Integrate additional LLMs or semantic models as needed.
+
+---
+
+## Running MCP Server in Docker & Python Agent Externally
+
+You can run the MCP server (Node.js/TypeScript) inside a Docker container while running the Python agent separately on your host machine. This is useful for development, debugging, or when you want to isolate the database server from the AI agent.
+
+### 1. Start MCP Server in Docker
+
+```bash
+docker-compose up -d
+```
+This will start the MCP server and any required services (ArangoDB, ChromaDB, etc.) as defined in your `docker-compose.yml`.
+
+- The MCP server will be available at `http://localhost:3000` (or the port specified in your compose file).
+- You can check logs with:
+  ```bash
+  docker-compose logs -f
+  ```
+
+### 2. Run Python Agent Externally
+
+On your host machine (outside Docker):
+
+```bash
+cd mcp-server-arangodb/python_agent
+pip install -r requirements.txt
+python app.py
+```
+
+- The Python agent will start its Flask server (default: `http://localhost:5001`).
+- Make sure your environment variables point to the correct MCP server URL (e.g., `MCP_URL=http://localhost:3000`).
+- You can interact with the agent via HTTP endpoints or integrate with VSCode/Claude as described above.
+
+### 3. Environment Configuration
+
+- Ensure your `.env` or environment variables in the Python agent reference the Docker MCP server:
+  ```env
+  MCP_URL=http://localhost:3000
+  ARANGO_URL=http://localhost:8529
+  ...
+  ```
+- You can also use Docker networking to connect containers if needed (see Docker docs for advanced setups).
+
+### 4. Troubleshooting
+
+- If you have port conflicts, change the exposed ports in `docker-compose.yml` or Flask config.
+- Use `docker ps` to verify running containers and `docker exec -it <container> bash` to debug inside containers.
+- Check both MCP server and Python agent logs for errors.
