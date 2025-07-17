@@ -1,359 +1,165 @@
-# MCP Server for ArangoDB
+# Python Agent for ArangoDB MCP Server
 
-[![smithery badge](https://smithery.ai/badge/@ravenwits/mcp-server-arangodb)](https://smithery.ai/server/@ravenwits/mcp-server-arangodb)
+## Index
 
-A Model Context Protocol server for ArangoDB
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Installation](#installation)
+4. [Configuration](#configuration)
+5. [Environment Variables](#environment-variables)
+6. [Semantic Search Setup](#semantic-search-setup)
+7. [Usage Examples](#usage-examples)
+8. [Integration: Claude & VSCode](#integration-claude--vscode)
+9. [Development](#development)
+10. [Debugging](#debugging)
+11. [License](#license)
 
-This is a TypeScript-based MCP server that provides database interaction capabilities through ArangoDB with semantic search support. It implements core database operations using ArangoDB and semantic search using ChromaDB with Ollama embeddings. The server architecture is split into three components:
+---
 
-1. **MCP Server**: Handles MCP protocol and ArangoDB operations (Node.js)
-2. **ChromaDB Server**: Manages vector embeddings and similarity search (Python/Flask)
-3. **Ollama Service**: Provides local embedding model support
+## Overview
 
-You can use it with the Claude app and VS Code extensions that support MCP, like Cline!
+This Python agent provides Model Context Protocol (MCP) support for ArangoDB, enabling advanced database operations and semantic search via ChromaDB and Ollama embeddings. It is designed for use with Claude, VSCode extensions, and other MCP-compatible tools.
+
+---
 
 ## Features
 
-### Tools
+- **AQL Query Execution**: Run ArangoDB queries with bind variables.
+- **Document Operations**: Insert, update, remove documents.
+- **Collection Management**: List, create, and backup collections.
+- **Semantic Search**: Find entities and articles using natural language queries.
+- **Graph Traversal**: Combine semantic search with ArangoDB graph operations.
+- **Local Embeddings**: No external API required.
 
-- `arango_query` - Execute AQL queries
-
-  - Takes an AQL query string as required parameter
-  - Optionally accepts bind variables for parameterized queries
-  - Returns query results as JSON
-
-- `arango_insert` - Insert documents into collections
-
-  - Takes collection name and document object as required parameters
-  - Automatically generates document key if not provided
-  - Returns the created document metadata
-
-- `arango_update` - Update existing documents
-
-  - Takes collection name, document key, and update object as required parameters
-  - Returns the updated document metadata
-
-- `arango_remove` - Remove documents from collections
-
-  - Takes collection name and document key as required parameters
-  - Returns the removed document metadata
-
-- `arango_backup` - Backup all collections to JSON files
-
-  - Takes output directory path as required parameter
-  - Creates JSON files for each collection with current data
-  - Useful for data backup and migration purposes
-
-- `arango_list_collections` - List all collections in the database
-
-  - Returns array of collection information including names, IDs, and types
-
-- `arango_create_collection` - Create a new collection in the database
-  - Takes collection name as required parameter
-  - Optionally specify collection type (document or edge collection)
-  - Configure waitForSync behavior for write operations
-  - Returns collection information including name, type, and status
-
-- `get_semantic_entity_articles` - Semantic search for entities and related articles
-  - Uses embedded ChromaDB with local Ollama embeddings for semantic similarity search
-  - Performs graph traversal in ArangoDB to find related articles
-  - Takes search query as required parameter
-  - Optional parameters: result count, graph depth, similarity threshold, filters
-  - Returns semantically similar entities and their associated articles with relevance scores
-  - Requires Ollama with `nomic-embed-text` model for local embeddings
+---
 
 ## Installation
 
-### Installing via NPM
-
-To install `arango-server` globally via NPM, run the following command:
-
 ```bash
-npm install -g arango-server
+# Clone the repository
+git clone <repo-url>
+cd mcp-server-arangodb/python_agent
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-### Running via NPX
+---
 
-To run `arango-server` directly without installation, use the following command:
+## Configuration
 
-```bash
-npx arango-server
+Configure the agent via environment variables or config files. Example `.env`:
+
+```env
+ARANGO_URL=http://localhost:8529
+ARANGO_DB=your_db
+ARANGO_USERNAME=your_user
+ARANGO_PASSWORD=your_password
+CHROMA_MODE=embedded
+CHROMA_EMBEDDING_FUNCTION=ollama
+OLLAMA_URL=http://localhost:11434
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 ```
 
-### Configuring for VSCode Agent
+---
 
-To use `arango-server` with the VSCode Copilot agent, you must have at least **VSCode 1.99.0 installed** and follow these steps:
+## Environment Variables
 
-1. **Create or edit the MCP configuration file**:
+- `ARANGO_URL`: ArangoDB server URL
+- `ARANGO_DB`: Database name
+- `ARANGO_USERNAME`: Username
+- `ARANGO_PASSWORD`: Password
+- `CHROMA_MODE`: ChromaDB mode (`embedded` recommended)
+- `CHROMA_EMBEDDING_FUNCTION`: Embedding function (`ollama`)
+- `OLLAMA_URL`: Ollama server URL
+- `OLLAMA_EMBEDDING_MODEL`: Embedding model (`nomic-embed-text`)
 
-   - **Workspace-specific configuration**: Create or edit the `.vscode/mcp.json` file in your workspace.
-   - **User-specific configuration**: Optionally, specify the server in the [setting(mcp)](vscode://settings/mcp) VS Code [user settings](https://code.visualstudio.com/docs/getstarted/personalize-vscode#_configure-settings) to enable the MCP server across all workspaces.
+---
 
-     _Tip: You can refer [here](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) to the MCP configuration documentation of VSCode for more details on how to set up the configuration file._
+## Semantic Search Setup
 
-2. **Add the following configuration**:
-
-   ```json
-   {
-   	"servers": {   		"arango-mcp": {
-   			"type": "stdio",
-   			"command": "npx",
-   			"args": ["arango-server"],
-   			"env": {
-   				"ARANGO_URL": "http://localhost:8529",
-   				"ARANGO_DB": "v20",
-   				"ARANGO_USERNAME": "app",
-   				"ARANGO_PASSWORD": "75Sab@MYa3Dj8Fc",
-   				"CHROMA_MODE": "embedded",
-   				"CHROMA_EMBEDDING_FUNCTION": "ollama",
-   				"OLLAMA_URL": "http://localhost:11434",
-   				"OLLAMA_EMBEDDING_MODEL": "nomic-embed-text"
-   			}
-   		}
-   	}
-   }
-   ```
-
-3. **Start the MCP server**:
-
-   - Open the Command Palette in VSCode (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac).
-   - Run the command `MCP: Start Server` and select `arango-mcp` from the list.
-
-4. **Verify the server**:
-   - Open the Chat view in VSCode and switch to Agent mode.
-   - Use the `Tools` button to verify that the `arango-server` tools are available.
-
-### Installing via Smithery
-
-To install ArangoDB for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@ravenwits/mcp-server-arangodb):
-
-```bash
-npx -y @smithery/cli install @ravenwits/mcp-server-arangodb --client claude
-```
-
-#### To use with Claude Desktop
-
-Go to: `Settings > Developer > Edit Config` or
-
-- MacOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%/Claude/claude_desktop_config.json`
-
-#### To use with Cline VSCode Extension
-
-Go to: `Cline Extension > MCP Servers > Edit Configuration` or
-
-- MacOS: `~/Library/Application Support/Code/User/globalStorage/cline.cline/config.json`
-- Windows: `%APPDATA%/Code/User/globalStorage/cline.cline/config.json`
-
-Add the following configuration to the `mcpServers` section:
-
-```json
-{
-	"mcpServers": {		"arango": {
-			"command": "node",
-			"args": ["/path/to/arango-server/build/index.js"],
-			"env": {
-				"ARANGO_URL": "your_database_url",
-				"ARANGO_DB": "your_database_name",
-				"ARANGO_USERNAME": "your_username",
-				"ARANGO_PASSWORD": "your_password",
-				"CHROMA_MODE": "embedded",
-				"CHROMA_EMBEDDING_FUNCTION": "ollama",
-				"OLLAMA_URL": "http://localhost:11434",
-				"OLLAMA_EMBEDDING_MODEL": "nomic-embed-text"
-			}
-		}
-	}
-}
-```
-
-### Environment Variables
-
-The server requires the following environment variables:
-
-- `ARANGO_URL` - ArangoDB server URL (note: 8529 is the default port for ArangoDB for local development)
-- `ARANGO_DB` - Database name
-- `ARANGO_USERNAME` - Database user
-- `ARANGO_PASSWORD` - Database password
-
-### ChromaDB and Ollama Setup (For Semantic Search)
-
-The server includes semantic search capabilities using embedded ChromaDB with local Ollama embeddings. This setup provides powerful semantic similarity search without requiring external API keys or servers.
-
-#### Prerequisites
-
-1. **Install Ollama**: Download and install from [https://ollama.ai/](https://ollama.ai/)
-
-2. **Pull the embedding model**:
+1. **Install Ollama**: [https://ollama.ai/](https://ollama.ai/)
+2. **Pull Model**:
    ```bash
    ollama pull nomic-embed-text
    ```
-
-3. **Start Ollama** (if not already running):
+3. **Start Ollama**:
    ```bash
    ollama serve
    ```
 
-#### ChromaDB Environment Variables (Optional)
+---
 
-The server uses embedded ChromaDB by default. You can customize the configuration with these environment variables:
+## Usage Examples
 
-```bash
-# ChromaDB Configuration (Embedded Mode - Default)
-CHROMA_MODE=embedded
-CHROMA_DATA_PATH=./chroma_data
-CHROMA_COLLECTION_NAME=entity_embeddings
+- **List Collections**: "List all collections in the database"
+- **Query Users**: "FOR user IN users RETURN user"
+- **Insert Document**: "Insert a new document with name 'John Doe' and email 'john@example.com' to the 'users' collection"
+- **Semantic Search**: "Find articles related to artificial intelligence using semantic search"
 
-# Ollama Configuration (Default)
-CHROMA_EMBEDDING_FUNCTION=ollama
-OLLAMA_URL=http://localhost:11434
-OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+---
 
-# Performance Tuning (Optional)
-CHROMA_MAX_RETRIES=3
-CHROMA_TIMEOUT=30000
-```
+## Integration: Claude & VSCode
 
-#### Features
+- **Claude Desktop**: Add MCP server config in `claude_desktop_config.json`
+- **VSCode Extension (Cline)**: Add MCP server config in `cline.cline/config.json`
 
-- **Local embeddings**: No external API costs or dependencies
-- **Embedded ChromaDB**: No separate ChromaDB server required
-- **Automatic setup**: Creates collections and data directories automatically
-- **Semantic similarity**: Find entities using natural language queries
-- **Graph traversal**: Combines semantic search with ArangoDB graph operations
-
-## Usage
-
-You can pretty much provide any meaningful prompt and Claude will try to execute the appropriate function.
-
-Some example propmts:
-
-- "List all collections in the database"
-- "Query all users"
-- "Insert a new document with name 'John Doe' and email "<john@example.com>' to the 'users' collection"
-- "Update the document with key '123456' or name 'Jane Doe' to change the age to 48"
-- "Create a new collection named 'products'"
-- "Find articles related to artificial intelligence using semantic search"
-- "Search for entities similar to 'machine learning' and show related articles"
-
-### Semantic Search Examples
-
-The semantic search tool allows natural language queries to find related entities and articles:
-
-- "Find articles about climate change and environmental policy"
-- "Search for content related to artificial intelligence and machine learning"
-- "Show me articles connected to economic trends and market analysis"
-- "Find entities similar to 'renewable energy' with their associated articles"
-
-### Usage with Claude App
-
-![Demo of using ArangoDB MCP server with Claude App](./assets/demo-claude.gif)
-
-### Uasge with Cline VSCode extension
-
-![Demo of using ArangoDB MCP server with Cline VSCode extension](./assets/demo-cline.gif)
-
-Query all users:
-
-```typescript
-{
-  "query": "FOR user IN users RETURN user"
-}
-```
-
-Insert a new document:
-
-```typescript
-{
-  "collection": "users",
-  "document": {
-    "name": "John Doe",
-    "email": "john@example.com"
-  }
-}
-```
-
-Update a document:
-
-```typescript
-{
-  "collection": "users",
-  "key": "123456",
-  "update": {
-    "name": "Jane Doe"
-  }
-}
-```
-
-Remove a document:
-
-```typescript
-{
-  "collection": "users",
-  "key": "123456"
-}
-```
-
-List all collections:
-
-```typescript
-{
-} // No parameters required
-```
-
-Backup database collections:
-
-```typescript
-{
-  "outputDir": "./backup" // Specify an absolute output directory path for the backup files (optional)
-  "collection": "users" // Specify a collection name to backup (optional) If no collection name is provided, all collections will be backed up
-  "docLimit": 1000 // Specify the maximum number of documents to backup per collection (optional), if not provided, all documents will be backed up (not having a limit might cause timeout for large collections)
-}
-```
-
-Create a new collection:
-
-```typescript
-{
-  "name": "products",
-  "type": "document", // "document" or "edge" (optional, defaults to "document")
-  "waitForSync": false // Optional, defaults to false
-}
-```
-
-Note: The server is database-structure agnostic and can work with any collection names or structures as long as they follow ArangoDB's document and edge collection models.
-
-## Disclaimer
-
-### For Development Use Only
-
-This tool is designed for local development environments only. While technically it could connect to a production database, this would create significant security risks and is explicitly discouraged. We use it exclusively with our development databases to maintain separation of concerns and protect production data.
+---
 
 ## Development
 
-1. Clone the repository
-2. Install dependencies:
+```bash
+# Build and run with auto-reload
+npm run build
+npm run watch
+```
 
-   ```bash
-   npm run build
-   ```
+---
 
-3. For development with auto-rebuild:
+## Debugging
 
-   ```bash
-   npm run watch
-   ```
-
-### Debugging
-
-Since MCP servers communicate over stdio, debugging can be challenging. recommended debugging can be done by using [MCP Inspector](https://github.com/modelcontextprotocol/inspector) for development:
+Use [MCP Inspector](https://github.com/modelcontextprotocol/inspector) for debugging MCP servers:
 
 ```bash
 npm run inspector
 ```
 
-The Inspector will provide a URL to access debugging tools in your browser.
+---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License. See [LICENSE](../LICENSE) for details.
+
+---
+
+## AI Agent Architecture
+
+The Python AI Agent is the core intelligence layer for the ArangoDB MCP server. It combines:
+
+- **NLP-powered Entity Extraction**: Uses spaCy and custom logic to extract dates, names, categories, authors, keywords, and more from user queries.
+- **Smart Tool Selection**: Dynamically selects the most relevant database or semantic tools based on query context and extracted entities.
+- **Semantic Reasoning**: Integrates with Ollama for local LLM-powered prompt generation and semantic search.
+- **MCP Protocol Client**: Communicates with the MCP server using JSON-RPC, handling tool discovery, invocation, and error recovery.
+- **Extensible Categorization**: Supports a wide range of tool categories (search, association, analysis, graph, database ops) for flexible query handling.
+- **Conversational Memory**: (Planned) Tracks conversation history for context-aware responses and multi-turn workflows.
+
+### How it Works
+
+1. **User Query**: Receives a natural language query via HTTP (Flask API).
+2. **Entity Extraction**: Parses the query to identify intent, entities, dates, and other relevant information.
+3. **Tool Selection**: Scores and selects the best tools for the query using a categorizer and scoring logic.
+4. **Prompt Generation**: Builds optimized prompts for the LLM and MCP server, including tool schemas and context.
+5. **Tool Execution**: Invokes the selected tool(s) via MCP, handling parameter conversion and error recovery.
+6. **Response Formatting**: Formats the result for display, including markdown/HTML conversion for rich output.
+
+### Key Classes
+- `SmartAIAgent`: Main orchestrator for query processing, initialization, and diagnostics.
+- `EntityExtractor`: NLP-based entity extraction from queries.
+- `SmartToolSelector`: Scores and selects tools based on query context.
+- `MCPClient`: Handles MCP protocol communication and tool execution.
+- `OllamaClient`: Integrates with Ollama for LLM-powered reasoning and semantic search.
+
+### Extending the Agent
+- Add new tool schemas to MCP server and update the categorizer for new capabilities.
+- Extend entity extraction logic for domain-specific queries.
+- Integrate additional LLMs or semantic models as needed.
