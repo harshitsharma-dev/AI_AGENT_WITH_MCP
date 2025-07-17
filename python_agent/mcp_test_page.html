@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Server Connection Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .status-bar {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-connected {
+            background: #28a745;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .response-section {
+            grid-column: 1 / -1;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .response-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+        
+        .response-content {
+            display: none;
+            background: white;
+            border-radius: 6px;
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .response-content.active {
+            display: block;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .endpoint-examples {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid #e1e5e9;
+            margin-top: 15px;
+        }
+        
+        .example-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .example-item:hover {
+            background: #e9ecef;
+        }
+        
+        .example-item strong {
+            color: #667eea;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .log-entry {
+            padding: 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .log-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .log-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .log-success {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔌 MCP Server Connection Tester</h1>
+            <p>Test connectivity and endpoints for your MCP (Model Context Protocol) server</p>
+            <div class="status-bar">
+                <div>
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span id="statusText">Ready to test</span>
+                </div>
+                <div id="serverInfo"></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="section">
+                <h2 class="section-title">🛠️ Server Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="serverUrl">Server URL:</label>
+                    <input type="text" id="serverUrl" value="http://localhost:6001" placeholder="http://localhost:6001">
+                </div>
+                
+                <div class="form-group">
+                    <label for="endpoint">Test Endpoint:</label>
+                    <select id="endpoint" onchange="updateEndpointInfo()">
+                        <option value="/health">GET /health - Health check</option>
+                        <option value="/tools">GET /tools - List available tools</option>
+                        <option value="/tools/call">POST /tools/call - Execute a tool</option>
+                        <option value="/sse">GET /sse - SSE connection</option>
+                        <option value="/sse/message">POST /sse/message - Send MCP message</option>
+                        <option value="custom">Custom endpoint...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="customEndpointGroup" style="display: none;">
+                    <label for="customEndpoint">Custom Endpoint:</label>
+                    <input type="text" id="customEndpoint" placeholder="/your/custom/endpoint">
+                </div>
+                
+                <div class="form-group" id="methodGroup">
+                    <label for="method">HTTP Method:</label>
+                    <select id="method">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="headersGroup">
+                    <label for="headers">Headers (JSON):</label>
+                    <textarea id="headers" rows="3" placeholder='{"Content-Type": "application/json"}'></textarea>
+                </div>
+                
+                <div class="form-group" id="bodyGroup">
+                    <label for="requestBody">Request Body (JSON):</label>
+                    <textarea id="requestBody" rows="6" placeholder='{"name": "aql_query", "arguments": {"query": "FOR doc IN test LIMIT 1 RETURN doc"}}'></textarea>
+                </div>
+                
+                <button class="btn" onclick="testConnection()">🔍 Test Connection</button>
+                <button class="btn btn-secondary" onclick="runQuickTests()">⚡ Run Quick Tests</button>
+                <button class="btn btn-success" onclick="clearLogs()">🧹 Clear Logs</button>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">📋 Endpoint Examples</h2>
+                
+                <div class="endpoint-examples">
+                    <div class="example-item" onclick="setExample('health')">
+                        <strong>Health Check</strong><br>
+                        GET /health - Basic server status
+                    </div>
+                    
+                    <div class="example-item" onclick="setExample('tools')">
+                        <strong>List Tools</strong><br>
+                        GET /tools - Get available MCP tools
+                    </div>
+                    
+                    <div class="example-item" onclick="setExample('call_simple')">
+                        <strong>Simple Tool Call</strong><br>
+                        POST /tools/call - Execute AQL query
+                    </div>
+                    
+                    <div class="example-item" onclick="setExample('call_jsonrpc')">
+                        <strong>JSON-RPC Tool Call</strong><br>
+                        POST /tools/call - JSON-RPC format
+                    </div>
+                    
+                    <div class="example-item" onclick="setExample('sse_connect')">
+                        <strong>SSE Connection</strong><br>
+                        GET /sse - Server-Sent Events
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h3>🎯 Quick Actions</h3>
+                    <button class="btn btn-secondary" onclick="pingServer()" style="margin-bottom: 5px;">📡 Ping Server</button>
+                    <button class="btn btn-secondary" onclick="checkCORS()" style="margin-bottom: 5px;">🔗 Check CORS</button>
+                    <button class="btn btn-secondary" onclick="testTimeout()" style="margin-bottom: 5px;">⏱️ Test Timeout</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="response-section">
+            <h2 class="section-title">📊 Response & Logs</h2>
+            
+            <div class="response-tabs">
+                <div class="tab active" onclick="switchTab('response')">Response</div>
+                <div class="tab" onclick="switchTab('raw')">Raw Data</div>
+                <div class="tab" onclick="switchTab('logs')">Connection Logs</div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Making request...</p>
+            </div>
+            
+            <div class="response-content active" id="responseContent">
+                <em>Response will appear here after making a request...</em>
+            </div>
+            
+            <div class="response-content" id="rawContent">
+                <em>Raw response data will appear here...</em>
+            </div>
+            
+            <div class="response-content" id="logsContent">
+                <em>Connection logs will appear here...</em>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'response';
+        let connectionLogs = [];
+
+        // Initialize default headers
+        document.getElementById('headers').value = JSON.stringify({
+            "Content-Type": "application/json"
+        }, null, 2);
+
+        function updateEndpointInfo() {
+            const endpoint = document.getElementById('endpoint').value;
+            const methodSelect = document.getElementById('method');
+            const bodyGroup = document.getElementById('bodyGroup');
+            const customGroup = document.getElementById('customEndpointGroup');
+            
+            if (endpoint === 'custom') {
+                customGroup.style.display = 'block';
+                return;
+            } else {
+                customGroup.style.display = 'none';
+            }
+            
+            // Set method and body visibility based on endpoint
+            switch(endpoint) {
+                case '/health':
+                case '/tools':
+                case '/sse':
+                    methodSelect.value = 'GET';
+                    bodyGroup.style.display = 'none';
+                    break;
+                case '/tools/call':
+                case '/sse/message':
+                    methodSelect.value = 'POST';
+                    bodyGroup.style.display = 'block';
+                    break;
+            }
+        }
+
+        function setExample(type) {
+            const endpointSelect = document.getElementById('endpoint');
+            const methodSelect = document.getElementById('method');
+            const bodyTextarea = document.getElementById('requestBody');
+            const headersTextarea = document.getElementById('headers');
+            
+            switch(type) {
+                case 'health':
+                    endpointSelect.value = '/health';
+                    methodSelect.value = 'GET';
+                    bodyTextarea.value = '';
+                    break;
+                    
+                case 'tools':
+                    endpointSelect.value = '/tools';
+                    methodSelect.value = 'GET';
+                    bodyTextarea.value = '';
+                    break;
+                    
+                case 'call_simple':
+                    endpointSelect.value = '/tools/call';
+                    methodSelect.value = 'POST';
+                    bodyTextarea.value = JSON.stringify({
+                        "name": "aql_query",
+                        "arguments": {
+                            "query": "FOR doc IN test LIMIT 1 RETURN doc",
+                            "bindVars": {}
+                        }
+                    }, null, 2);
+                    break;
+                    
+                case 'call_jsonrpc':
+                    endpointSelect.value = '/tools/call';
+                    methodSelect.value = 'POST';
+                    bodyTextarea.value = JSON.stringify({
+                        "jsonrpc": "2.0",
+                        "method": "tools/call",
+                        "params": {
+                            "name": "aql_query",
+                            "arguments": {
+                                "query": "FOR doc IN test LIMIT 1 RETURN doc",
+                                "bindVars": {}
+                            }
+                        },
+                        "id": Date.now()
+                    }, null, 2);
+                    break;
+                    
+                case 'sse_connect':
+                    endpointSelect.value = '/sse';
+                    methodSelect.value = 'GET';
+                    headersTextarea.value = JSON.stringify({
+                        "Accept": "text/event-stream",
+                        "Cache-Control": "no-cache"
+                    }, null, 2);
+                    bodyTextarea.value = '';
+                    break;
+            }
+            
+            updateEndpointInfo();
+        }
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            connectionLogs.push({message: logEntry, type});
+            updateLogsDisplay();
+        }
+
+        function updateLogsDisplay() {
+            const logsContent = document.getElementById('logsContent');
+            logsContent.innerHTML = connectionLogs.map(log => 
+                `<div class="log-entry log-${log.type}">${log.message}</div>`
+            ).join('');
+            logsContent.scrollTop = logsContent.scrollHeight;
+        }
+
+        function clearLogs() {
+            connectionLogs = [];
+            updateLogsDisplay();
+            document.getElementById('responseContent').innerHTML = '<em>Response will appear here after making a request...</em>';
+            document.getElementById('rawContent').innerHTML = '<em>Raw response data will appear here...</em>';
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.response-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tab + 'Content').classList.add('active');
+        }
+
+        function updateStatus(connected, info = '') {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+            const serverInfo = document.getElementById('serverInfo');
+            
+            if (connected) {
+                indicator.classList.add('status-connected');
+                text.textContent = 'Connected';
+                serverInfo.textContent = info;
+            } else {
+                indicator.classList.remove('status-connected');
+                text.textContent = 'Disconnected';
+                serverInfo.textContent = info;
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        async function testConnection() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const endpoint = document.getElementById('endpoint').value === 'custom' 
+                ? document.getElementById('customEndpoint').value 
+                : document.getElementById('endpoint').value;
+            const method = document.getElementById('method').value;
+            const headersText = document.getElementById('headers').value.trim();
+            const bodyText = document.getElementById('requestBody').value.trim();
+            
+            if (!serverUrl) {
+                addLog('Error: Server URL is required', 'error');
+                return;
+            }
+            
+            if (!endpoint) {
+                addLog('Error: Endpoint is required', 'error');
+                return;
+            }
+            
+            const url = serverUrl + endpoint;
+            addLog(`Making ${method} request to: ${url}`, 'info');
+            
+            showLoading();
+            
+            try {
+                // Parse headers
+                let headers = {};
+                if (headersText) {
+                    try {
+                        headers = JSON.parse(headersText);
+                    } catch (e) {
+                        addLog(`Warning: Invalid headers JSON, using default: ${e.message}`, 'error');
+                        headers = {"Content-Type": "application/json"};
+                    }
+                }
+                
+                // Parse body
+                let body = null;
+                if (bodyText && (method === 'POST' || method === 'PUT')) {
+                    try {
+                        body = JSON.parse(bodyText);
+                    } catch (e) {
+                        addLog(`Warning: Invalid body JSON: ${e.message}`, 'error');
+                        body = bodyText; // Use as string if not valid JSON
+                    }
+                }
+                
+                const requestOptions = {
+                    method: method,
+                    headers: headers,
+                    mode: 'cors'
+                };
+                
+                if (body !== null) {
+                    requestOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
+                }
+                
+                addLog(`Request options: ${JSON.stringify(requestOptions, null, 2)}`, 'info');
+                
+                const startTime = performance.now();
+                const response = await fetch(url, requestOptions);
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+                
+                addLog(`Response received in ${responseTime}ms`, 'info');
+                addLog(`Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                addLog(`Headers: ${JSON.stringify(Object.fromEntries(response.headers), null, 2)}`, 'info');
+                
+                let responseData;
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('application/json')) {
+                    responseData = await response.json();
+                    addLog('Response type: JSON', 'info');
+                } else if (contentType && contentType.includes('text/')) {
+                    responseData = await response.text();
+                    addLog('Response type: Text', 'info');
+                } else {
+                    responseData = await response.text();
+                    addLog('Response type: Raw text', 'info');
+                }
+                
+                // Update displays
+                document.getElementById('responseContent').innerHTML = formatResponse(responseData, response.ok);
+                document.getElementById('rawContent').innerHTML = formatRawResponse(response, responseData);
+                
+                if (response.ok) {
+                    updateStatus(true, `${response.status} - ${responseTime}ms`);
+                    addLog('✅ Request successful', 'success');
+                } else {
+                    updateStatus(false, `${response.status} - Error`);
+                    addLog(`❌ Request failed: ${response.status}`, 'error');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Connection error: ${error.message}`, 'error');
+                updateStatus(false, 'Connection failed');
+                
+                document.getElementById('responseContent').innerHTML = `<div class="error">
+                    <strong>Connection Error:</strong><br>
+                    ${error.message}<br><br>
+                    <strong>Possible causes:</strong><br>
+                    • Server is not running on the specified port<br>
+                    • CORS is not properly configured<br>
+                    • Network connectivity issues<br>
+                    • Firewall blocking the connection
+                </div>`;
+                
+                document.getElementById('rawContent').innerHTML = `<div class="error">
+                    Error: ${error.message}
+                    
+                    Stack trace:
+                    ${error.stack || 'No stack trace available'}
+                </div>`;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function formatResponse(data, success) {
+            const className = success ? 'success' : 'error';
+            if (typeof data === 'object') {
+                return `<div class="${className}">${JSON.stringify(data, null, 2)}</div>`;
+            }
+            return `<div class="${className}">${data}</div>`;
+        }
+
+        function formatRawResponse(response, data) {
+            return `Response Status: ${response.status} ${response.statusText}
+Response URL: ${response.url}
+Response Type: ${response.type}
+
+Headers:
+${JSON.stringify(Object.fromEntries(response.headers), null, 2)}
+
+Body:
+${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}`;
+        }
+
+        async function pingServer() {
+            addLog('🏓 Pinging server...', 'info');
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            
+            try {
+                const startTime = performance.now();
+                const response = await fetch(serverUrl + '/health', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+                
+                if (response.ok) {
+                    addLog(`✅ Server is reachable (${responseTime}ms)`, 'success');
+                } else {
+                    addLog(`⚠️ Server responded with ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Server is not reachable: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkCORS() {
+            addLog('🔗 Checking CORS configuration...', 'info');
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            
+            try {
+                const response = await fetch(serverUrl + '/health', {
+                    method: 'OPTIONS',
+                    mode: 'cors'
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                };
+                
+                addLog(`CORS headers: ${JSON.stringify(corsHeaders, null, 2)}`, 'info');
+                
+                if (corsHeaders['Access-Control-Allow-Origin']) {
+                    addLog('✅ CORS appears to be configured', 'success');
+                } else {
+                    addLog('⚠️ CORS may not be properly configured', 'error');
+                }
+            } catch (error) {
+                addLog(`❌ CORS check failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testTimeout() {
+            addLog('⏱️ Testing connection timeout...', 'info');
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+            
+            try {
+                const response = await fetch(serverUrl + '/health', {
+                    signal: controller.signal,
+                    mode: 'cors'
+                });
+                clearTimeout(timeoutId);
+                addLog('✅ Connection is fast (< 2s)', 'success');
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    addLog('⚠️ Connection is slow (> 2s)', 'error');
+                } else {
+                    addLog(`❌ Timeout test failed: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function runQuickTests() {
+            addLog('⚡ Running quick diagnostic tests...', 'info');
+            await pingServer();
+            await checkCORS();
+            await testTimeout();
+            
+            // Test basic endpoints
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const endpoints = ['/health', '/tools'];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    addLog(`Testing ${endpoint}...`, 'info');
+                    const response = await fetch(serverUrl + endpoint, { mode: 'cors' });
+                    addLog(`${endpoint}: ${response.status} ${response.ok ? '✅' : '❌'}`, response.ok ? 'success' : 'error');
+                } catch (error) {
+                    addLog(`${endpoint}: Error - ${error.message} ❌`, 'error');
+                }
+            }
+            
+            addLog('⚡ Quick tests completed', 'info');
+        }
+
+        // Initialize
+        updateEndpointInfo();
+        addLog('🚀 MCP Server Connection Tester initialized', 'success');
+        addLog('💡 Tip: Start with a quick ping to test basic connectivity', 'info');
+    </script>
+</body>
+</html>

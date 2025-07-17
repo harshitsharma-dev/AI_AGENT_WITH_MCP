@@ -1,0 +1,8 @@
+flask==2.3.3
+requests==2.31.0
+langchain==0.1.0
+langchain-community==0.0.13
+ollama==0.1.7
+python-dotenv==1.0.0
+spacy==3.7.2
+flask-cors==4.0.0

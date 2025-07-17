@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart AI Agent - MCP Tool Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        select, textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, textarea:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .server-log {
+            background: #1e1e1e;
+            color: #00ff00;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        .log-section {
+            margin-top: 20px;
+        }
+
+        .btn-small {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+            margin: 5px;
+        }        .response-section {
+            margin-top: 30px;
+        }        .ai-response-section {
+            margin-bottom: 30px;
+            border: 3px solid #4CAF50;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #f0f8f0, #ffffff);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.2);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .ai-response-section:hover {
+            transform: translateY(-2px);
+        }
+
+        .ai-response-section .section-title {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            margin: -20px -20px 25px -20px;
+            padding: 20px 25px;
+            border-radius: 12px 12px 0 0;
+            font-size: 1.4em;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .technical-response-section {
+            margin-bottom: 20px;
+            border: 3px solid #2196F3;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #f0f8ff, #ffffff);
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.2);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .technical-response-section:hover {
+            transform: translateY(-2px);
+        }
+
+        .technical-response-section .section-title {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+            margin: -20px -20px 25px -20px;
+            padding: 20px 25px;
+            border-radius: 12px 12px 0 0;
+            font-size: 1.4em;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .empty-state {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .response-box {
+            background: #f8f9fa;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .formatted-response {
+            background: linear-gradient(135deg, #f8f9ff 0%, #fff5f5 100%);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .formatted-response h1 {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .formatted-response h2 {
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .formatted-response h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .formatted-response p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        .formatted-response ul, .formatted-response ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        .formatted-response li {
+            margin-bottom: 8px;
+        }
+
+        .formatted-response strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .formatted-response em {
+            color: #764ba2;
+            font-style: italic;
+        }
+
+        .formatted-response br {
+            margin-bottom: 10px;
+        }
+
+        .formatted-response .list-item {
+            margin: 10px 0;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+
+        .formatted-response .numbered-item {
+            margin: 8px 0;
+            padding: 6px 0;
+        }
+
+        .formatted-response .bullet-item {
+            margin: 6px 0 6px 20px;
+            color: #555;
+        }
+
+        .formatted-response blockquote {
+            margin: 15px 0;
+            padding: 12px 20px;
+            background: #f1f3f4;
+            border-left: 4px solid #34495e;
+            font-style: italic;
+            color: #2c3e50;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #28a745;
+        }
+
+        .status-offline {
+            background: #dc3545;
+        }
+
+        .endpoint-description {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+
+        .json-key {
+            color: #d73a49;
+            font-weight: bold;
+        }
+
+        .json-string {
+            color: #032f62;
+        }
+
+        .json-number {
+            color: #005cc5;
+        }
+
+        .json-boolean {
+            color: #e36209;
+        }
+
+        .json-null {
+            color: #6f42c1;
+        }
+
+        .example-queries {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .example-query {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .example-query:hover {
+            background: #e9ecef;
+        }
+
+        .example-query strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }        .ai-response-container {
+            width: 100%;
+            margin: 40px 0;
+            padding: 0;
+            position: relative;
+        }
+
+        .ai-response-container::after {
+            content: "🎯 FORMATTED RESPONSE ABOVE ⬆️";
+            display: block;
+            text-align: center;
+            color: #4CAF50;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 10px;
+            background: linear-gradient(135deg, #f0f8f0, #e8f5e8);
+            border-radius: 20px;
+            border: 2px dashed #4CAF50;
+        }
+
+        .technical-response-container {
+            width: 100%;
+            margin: 40px 0;
+            padding: 0;
+            position: relative;
+        }
+
+        .technical-response-container::after {
+            content: "🔧 RAW JSON DATA ABOVE ⬆️";
+            display: block;
+            text-align: center;
+            color: #2196F3;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 10px;
+            background: linear-gradient(135deg, #f0f8ff, #e3f2fd);
+            border-radius: 20px;
+            border: 2px dashed #2196F3;
+        }
+
+        .logs-container {
+            width: 100%;
+            margin: 40px 0;
+            padding: 0;
+        }
+
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">        <div class="header">
+            <h1>🤖 Smart AI Agent Interface</h1>
+            <p>MCP Tool Selection & News Search System</p>
+            <div style="margin-top: 15px;">
+                <span class="status-indicator" id="serverStatus"></span>
+                <span id="serverStatusText">Checking connection...</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="two-column">
+                <div>
+                    <div class="section">
+                        <h2 class="section-title">🔧 API Configuration</h2>
+                        
+                        <div class="form-group">
+                            <label for="endpoint">Select Endpoint:</label>
+                            <select id="endpoint" onchange="updateEndpointDescription()">
+                                <option value="/chat">💬 Chat - Main conversation endpoint</option>
+                                <option value="/analyze">🔍 Analyze - Query analysis & tool selection</option>
+                                <option value="/tools">🛠️ Tools - List available tools</option>
+                                <option value="/status">📊 Status - System health check</option>
+                                <option value="/test">🧪 Test - Run connection tests</option>
+                                <option value="/initialize">🚀 Initialize - Force re-initialization</option>
+                                <option value="/tools/refresh">🔄 Refresh Tools - Reload from MCP server</option>
+                                <option value="/">❤️ Health - Basic health check</option>
+                            </select>
+                        </div>
+
+                        <div id="endpointDescription" class="endpoint-description">
+                            Select an endpoint to see its description
+                        </div>
+
+                        <div class="form-group" id="messageGroup">
+                            <label for="message">Message/Query:</label>
+                            <textarea id="message" placeholder="Enter your query here..."></textarea>
+                        </div>
+
+                        <button class="btn" onclick="makeRequest()" id="submitBtn">
+                            Send Request
+                        </button>
+                    </div>
+
+                    <div class="section" id="exampleSection">
+                        <h2 class="section-title">💡 Example Queries</h2>
+                        <div class="example-queries">
+                            <div class="example-query" onclick="setExample('Show me recent sports news')">
+                                <strong>Recent News</strong>
+                                Show me recent sports news
+                            </div>
+                            <div class="example-query" onclick="setExample('Find articles by John Smith from last month')">
+                                <strong>Author Search</strong>
+                                Find articles by John Smith from last month
+                            </div>
+                            <div class="example-query" onclick="setExample('Get technology news from January 2024')">
+                                <strong>Date Range</strong>
+                                Get technology news from January 2024
+                            </div>
+                            <div class="example-query" onclick="setExample('List all authors in politics category')">
+                                <strong>Browse Content</strong>
+                                List all authors in politics category
+                            </div>
+                            <div class="example-query" onclick="setExample('Search for climate change articles')">
+                                <strong>Full-text Search</strong>
+                                Search for climate change articles
+                            </div>
+                            <div class="example-query" onclick="setExample('Find related articles about artificial intelligence')">
+                                <strong>Related Content</strong>
+                                Find related articles about artificial intelligence
+                            </div>
+                        </div>                    </div>                </div>
+                
+                <!-- COMPLETELY SEPARATE AI RESPONSE CONTAINER -->
+                <div class="ai-response-container">
+                    <div class="section ai-response-section">
+                        <h2 class="section-title">💬 AI Response</h2>
+                        
+                        <div class="loading" id="loading">
+                            <div class="spinner"></div>
+                            <div>Processing request...</div>
+                        </div>
+
+                        <div class="formatted-response" id="formattedResponse">
+                            <div class="empty-state">
+                                <em>✨ Your beautifully formatted AI response will appear here...</em>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COMPLETELY SEPARATE TECHNICAL RESPONSE CONTAINER -->
+                <div class="technical-response-container">
+                    <div class="section technical-response-section">
+                        <h2 class="section-title">📄 Technical Response (JSON)</h2>
+                        
+                        <div class="response-box" id="responseBox">
+                            <div class="empty-state">
+                                <em>🔧 Raw technical response data will appear here...</em>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LOGS CONTAINER -->
+                <div class="logs-container">
+                    <div class="section log-section">
+                        <h2 class="section-title">📋 Server Logs</h2>
+                        <div style="margin-bottom: 10px;">
+                            <button class="btn btn-small" onclick="toggleLogs()" id="toggleLogsBtn">
+                                Show Logs
+                            </button>
+                            <button class="btn btn-small" onclick="clearLogs()" id="clearLogsBtn">
+                                Clear Logs
+                            </button>
+                        </div>                        <div class="server-log" id="serverLog">
+                            Server logs will appear here when you start the Python server...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    <script>
+        const SERVER_URL = 'http://localhost:5001';
+        let serverOnline = false;
+        let logVisible = false;
+
+        const endpointDescriptions = {
+            '/chat': {
+                description: 'Main conversation endpoint. Processes natural language queries and automatically selects the best tools. Uses advanced NLP for entity extraction and smart tool selection.',
+                needsMessage: true,
+                example: 'Show me recent sports news from last week'
+            },
+            '/analyze': {
+                description: 'Analyzes your query to show entity extraction and tool selection process. Great for understanding how the AI agent processes your requests.',
+                needsMessage: true,
+                example: 'Find articles about technology from CNN'
+            },
+            '/tools': {
+                description: 'Lists all available tools organized by category. Shows the comprehensive set of search, analysis, and database tools.',
+                needsMessage: false,
+                example: null
+            },
+            '/status': {
+                description: 'Detailed system status including MCP connection, Ollama availability, tool count, and conversation history.',
+                needsMessage: false,
+                example: null
+            },
+            '/test': {
+                description: 'Runs comprehensive connection tests for MCP server, Ollama, NLP capabilities, and performs a sample query.',
+                needsMessage: false,
+                example: null
+            },
+            '/initialize': {
+                description: 'Forces re-initialization of the agent. Useful if connections were lost or tools need to be refreshed.',
+                needsMessage: false,
+                example: null
+            },
+            '/tools/refresh': {
+                description: 'Refreshes the tool list from the MCP server. Use this if new tools have been added to the server.',
+                needsMessage: false,
+                example: null
+            },
+            '/': {
+                description: 'Basic health check endpoint. Shows service status, tool availability, and system information.',
+                needsMessage: false,
+                example: null
+            }
+        };
+
+        function setExample(exampleText) {
+            document.getElementById('message').value = exampleText;
+        }
+
+        function updateEndpointDescription() {
+            const endpoint = document.getElementById('endpoint').value;
+            const info = endpointDescriptions[endpoint];
+            const messageGroup = document.getElementById('messageGroup');
+            const exampleSection = document.getElementById('exampleSection');
+            
+            if (info) {
+                document.getElementById('endpointDescription').innerHTML = 
+                    `<strong>${endpoint}</strong><br>${info.description}`;
+                
+                messageGroup.style.display = info.needsMessage ? 'block' : 'none';
+                exampleSection.style.display = info.needsMessage ? 'block' : 'none';
+                
+                if (info.example) {
+                    document.getElementById('message').placeholder = info.example;
+                }
+            }
+        }        // Server management functions removed - interface now connects directly to port 5001
+
+        function toggleLogs() {
+            const serverLog = document.getElementById('serverLog');
+            const toggleBtn = document.getElementById('toggleLogsBtn');
+            
+            logVisible = !logVisible;
+            serverLog.style.display = logVisible ? 'block' : 'none';
+            toggleBtn.textContent = logVisible ? 'Hide Logs' : 'Show Logs';
+        }
+
+        function clearLogs() {
+            document.getElementById('serverLog').textContent = 'Server logs cleared...\n';
+        }
+
+        function appendLog(message) {
+            const serverLog = document.getElementById('serverLog');
+            const timestamp = new Date().toLocaleTimeString();
+            serverLog.textContent += `[${timestamp}] ${message}`;
+            serverLog.scrollTop = serverLog.scrollHeight;
+        }
+
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(SERVER_URL + '/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    serverOnline = true;
+                    document.getElementById('serverStatus').className = 'status-indicator status-online';
+                    document.getElementById('serverStatusText').textContent = 'Server Online';
+                } else {
+                    throw new Error('Server responded with error');
+                }
+            } catch (error) {
+                serverOnline = false;
+                document.getElementById('serverStatus').className = 'status-indicator status-offline';
+                document.getElementById('serverStatusText').textContent = 'Server Offline';
+            }
+        }
+
+        async function makeRequest() {
+            const endpoint = document.getElementById('endpoint').value;
+            const message = document.getElementById('message').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const responseBox = document.getElementById('responseBox');            // Show loading state
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            responseBox.innerHTML = '';
+              // Clear formatted response and show empty state
+            const formattedResponse = document.getElementById('formattedResponse');
+            formattedResponse.innerHTML = '<div class="empty-state"><em>🔄 Processing your request...</em></div>';
+            formattedResponse.style.display = 'block';
+
+            try {
+                const info = endpointDescriptions[endpoint];
+                let url = SERVER_URL + endpoint;
+                let options = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                if (info.needsMessage) {
+                    if (!message.trim()) {
+                        throw new Error('Message is required for this endpoint');
+                    }
+                    options.method = 'POST';
+                    options.body = JSON.stringify({ message: message.trim() });
+                } else {
+                    options.method = endpoint === '/initialize' || endpoint === '/tools/refresh' ? 'POST' : 'GET';
+                }
+
+                const response = await fetch(url, options);
+                const data = await response.json();
+
+                // Format and display the response
+                displayResponse(data, response.ok);
+
+            } catch (error) {
+                displayResponse({
+                    error: error.message,
+                    details: 'Failed to connect to the server. Make sure the Flask app is running on localhost:5001'
+                }, false);
+            } finally {
+                // Hide loading state
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }        function formatResponseText(text) {
+            if (!text) return '';
+            
+            // Convert markdown-style formatting to HTML
+            let formatted = text
+                // Handle bold text with **
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // Handle headers with **Header:** pattern
+                .replace(/^\*\*(.*?):\*\*$/gm, '<h3>$1:</h3>')
+                // Handle headers without colon
+                .replace(/^\*\*(.*?)\*\*$/gm, '<h3>$1</h3>')
+                // Handle bullet points with *
+                .replace(/^\*\s+\*\*(.*?)\*\*:\s*(.*?)$/gm, '<div class="list-item"><strong>$1:</strong> $2</div>')
+                .replace(/^\*\s+(.*?)$/gm, '<div class="bullet-item">• $1</div>')
+                // Handle numbered lists
+                .replace(/^(\d+)\.\s+\*\*(.*?)\*\*:\s*(.*?)$/gm, '<div class="list-item"><strong>$1. $2:</strong> $3</div>')
+                .replace(/^(\d+)\.\s+(.*?)$/gm, '<div class="numbered-item"><strong>$1.</strong> $2</div>')
+                // Handle simple bullet points with - or •
+                .replace(/^[-•]\s+(.*?)$/gm, '<div class="bullet-item">• $1</div>')
+                // Handle double line breaks as paragraph breaks
+                .replace(/\n\n+/g, '</p><p>')
+                // Handle single line breaks
+                .replace(/\n/g, '<br>')
+                // Handle quotes
+                .replace(/^"(.*?)"$/gm, '<blockquote>"$1"</blockquote>');
+            
+            // Wrap in paragraphs if not already wrapped
+            if (!formatted.includes('<p>') && !formatted.includes('<h3>') && !formatted.includes('<div class=')) {
+                formatted = '<p>' + formatted + '</p>';
+            }
+            
+            return formatted;        }
+          function displayResponse(data, success) {
+            const responseBox = document.getElementById('responseBox');
+            const formattedResponse = document.getElementById('formattedResponse');
+            
+            console.log('displayResponse called with data:', data);
+            console.log('formattedResponse element:', formattedResponse);
+            
+            // Always show the formatted response section - it's always visible now
+            formattedResponse.style.display = 'block';
+            
+            // Show formatted response if we have a successful response with content
+            if ((data.response || data.formatted_response) && (data.success !== false && success !== false)) {
+                console.log('Showing formatted response content');
+                
+                // Always prefer formatted_response if it exists
+                if (data.formatted_response) {
+                    console.log('Using formatted_response field');
+                    formattedResponse.innerHTML = data.formatted_response;
+                } else if (data.response) {
+                    console.log('Using response field with formatting');
+                    const formattedHTML = formatResponseText(data.response);
+                    formattedResponse.innerHTML = formattedHTML;
+                }
+            } else {
+                console.log('No valid response content - showing empty state');
+                formattedResponse.innerHTML = '<div class="empty-state"><em>❌ No formatted response available</em></div>';
+            }
+            
+            // Always show technical JSON response
+            if (success) {
+                responseBox.innerHTML = formatJSON(data);
+                responseBox.style.color = '#333';
+                responseBox.style.backgroundColor = '#f8f9fa';
+            } else {
+                responseBox.innerHTML = formatJSON(data);
+                responseBox.style.color = '#721c24';
+                responseBox.style.backgroundColor = '#f8d7da';
+            }
+        }
+
+        function formatJSON(obj) {
+            if (typeof obj === 'string') {
+                return obj;
+            }
+            
+            return syntaxHighlight(JSON.stringify(obj, null, 2));
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEndpointDescription();
+            checkServerStatus();
+            
+            // Check server status every 30 seconds
+            setInterval(checkServerStatus, 30000);
+
+            // Add Enter key support for message textarea
+            document.getElementById('message').addEventListener('keydown', function(event) {
+                if (event.ctrlKey && event.key === 'Enter') {
+                    makeRequest();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
