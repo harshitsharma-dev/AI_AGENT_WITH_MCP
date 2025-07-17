@@ -13,6 +13,8 @@
 9. [Development](#development)
 10. [Debugging](#debugging)
 11. [License](#license)
+12. [AI Agent Architecture](#ai-agent-architecture)
+13. [Running MCP Server in Docker & Python Agent Externally](#running-mcp-server-in-docker--python-agent-externally)
 
 ---
 
